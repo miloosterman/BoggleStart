@@ -1,3 +1,6 @@
+/*
+ * @Author: Milo Osterman
+ */
 package model;
 
 import java.io.File;
@@ -13,15 +16,13 @@ public class BoggleGame {
 
 	public static void main(String[] args) {
 		populateDictionary();
-
-		char[][] letters = { { 'N', 'O', 'Y', 'S' }, { 'H', 'T', 'N', 'T' }, { 'E', 'K', 'E', 'S' },
-				{ 'T', 'C', 'E', 'S' } };
-		String endCommand = "zz";
+		DiceTray tray = new DiceTray();
+		String endCommand = "ZZ";
+		TreeSet<String> allWords = computerResults(tray);
 		String[] guesses;
-		DiceTray tray = new DiceTray(letters);
 		TreeSet<String> foundWords = new TreeSet<>();
 		TreeSet<String> incorrectWords = new TreeSet<>();
-		TreeSet<String> allWords = computerResults(tray);
+
 		boolean endFlag = false;
 		Scanner sc = new Scanner(System.in);
 
@@ -36,6 +37,7 @@ public class BoggleGame {
 					computerResults(tray);
 
 				} else {
+					guesses[i] = guesses[i].toLowerCase();
 					if (tray.found(guesses[i]) && validWord(guesses[i], allWords)) {
 						foundWords.add(guesses[i]);
 						DUPLICATES.add(guesses[i]);
@@ -81,13 +83,13 @@ public class BoggleGame {
 	}
 
 	private static String[] getGuesses(Scanner sc) {
-		String[] guesses = sc.nextLine().toLowerCase().split(" ");
+		String[] guesses = sc.nextLine().split(" ");
 		return guesses;
 	}
 
 	private static void printResults(TreeSet<String> foundWords, TreeSet<String> incorrectWords,
 			TreeSet<String> allWords) {
-		System.out.print("Your score: " + SCORE + "\n" + "Words you found:\n" + "================\n");
+		System.out.print("Your score: " + SCORE + "\nWords you found:\n" + "================\n");
 		int i = 0;
 		for (String word : foundWords) {
 			System.out.print(word + " ");
