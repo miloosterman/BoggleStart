@@ -2,76 +2,143 @@ package model;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
+import java.util.TreeSet;
 
 public class BoggleGame {
 	private static HashSet<String> DICTIONARY = new HashSet<>();
 	private static HashSet<String> DUPLICATES = new HashSet<>();
+	private static int SCORE = 0;
 
 	public static void main(String[] args) {
 		populateDictionary();
-		
+
 		char[][] letters = { { 'N', 'O', 'Y', 'S' }, { 'H', 'T', 'N', 'T' }, { 'E', 'K', 'E', 'S' },
 				{ 'T', 'C', 'E', 'S' } };
-		int score = 0;
 		String endCommand = "zz";
 		String[] guesses;
-		ArrayList<String> foundWords = new ArrayList<>();
-		ArrayList<String> incorrectWords = new ArrayList<>();
 		DiceTray tray = new DiceTray(letters);
-		
-		guesses = intro(tray);
+		TreeSet<String> foundWords = new TreeSet<>();
+		TreeSet<String> incorrectWords = new TreeSet<>();
+		TreeSet<String> allWords = computerResults(tray);
+		boolean endFlag = false;
+		Scanner sc = new Scanner(System.in);
 
-		for (int i = 0; i < guesses.length; i++) {
-			if (guesses[i].equals(endCommand)) {
-				printResults(foundWords, incorrectWords, score);
+		intro(tray);
+		while (!endFlag) {
+			guesses = getGuesses(sc);
+			for (int i = 0; i < guesses.length; i++) {
+				if (guesses[i].equals(endCommand)) {
+					endFlag = true;
+					allWords = computerResults(tray);
+					printResults(foundWords, incorrectWords, allWords);
+					computerResults(tray);
 
-			} else {
-				if (tray.found(guesses[i]) && validWord(guesses[i])) {
-					foundWords.add(guesses[i]);
-					DUPLICATES.add(guesses[i]);
-					score++;
 				} else {
-					if (!DUPLICATES.contains(guesses[i])) {
-						incorrectWords.add(guesses[i]);
+					if (tray.found(guesses[i]) && validWord(guesses[i], allWords)) {
+						foundWords.add(guesses[i]);
+						DUPLICATES.add(guesses[i]);
+						updateScore(guesses[i]);
+					} else {
+						if (!DUPLICATES.contains(guesses[i])) {
+							incorrectWords.add(guesses[i]);
+						}
 					}
 				}
 			}
 		}
+		sc.close();
 	}
-	
-	private static String[] intro(DiceTray tray) {
-		Scanner sc = new Scanner(System.in);
+
+	private static void updateScore(String guess) {
+		switch (guess.length()) {
+		case 3:
+			SCORE++;
+			break;
+		case 4:
+			SCORE++;
+			break;
+		case 5:
+			SCORE += 2;
+			break;
+		case 6:
+			SCORE += 3;
+			break;
+		case 7:
+			SCORE += 5;
+			break;
+		default:
+			SCORE += 11;
+		}
+
+	}
+
+	private static void intro(DiceTray tray) {
 		System.out.println("Play one game of Boggle:\n");
 		System.out.println(tray);
 		System.out.println("Enter words or ZZ to quit:");
+	}
+
+	private static String[] getGuesses(Scanner sc) {
 		String[] guesses = sc.nextLine().toLowerCase().split(" ");
-		sc.close();
 		return guesses;
 	}
 
-	private static void printResults(ArrayList<String> foundWords, ArrayList<String> incorrectWords, int score) {
-		System.out.print("Your score: " + score + "\n" + "Words you found:\n" + "================\n");
-		for (int j = 0; j < foundWords.size(); j++) {
-			System.out.print(foundWords.get(j) + " ");
-			if (j + 1 % 11 == 0) {
+	private static void printResults(TreeSet<String> foundWords, TreeSet<String> incorrectWords,
+			TreeSet<String> allWords) {
+		System.out.print("Your score: " + SCORE + "\n" + "Words you found:\n" + "================\n");
+		int i = 0;
+		for (String word : foundWords) {
+			System.out.print(word + " ");
+			if ((i + 1) % 10 == 0) {
 				System.out.print("\n");
+			}
+			i++;
+		}
+		i = 0;
+		System.out.print("\n\nIncorrect words:\n" + "================\n");
+		for (String word : incorrectWords) {
+			System.out.print(word + " ");
+			if ((i + 1) % 10 == 0) {
+				System.out.print("\n");
+			}
+			i++;
+		}
+		i = 0;
+		int roboTally = 0;
+		TreeSet<String> wordsNotFound = new TreeSet<>();
+		for (String word : allWords) {
+			if (!foundWords.contains(word)) {
+				wordsNotFound.add(word);
+				roboTally++;
 			}
 		}
-		System.out.print("\n\nIncorrect words:\n" + "================\n");
-		for (int k = 0; k < incorrectWords.size(); k++) {
-			System.out.print(incorrectWords.get(k) + " ");
-			if (k + 1 % 11 == 0) {
+		System.out.print("\n\nYou could have found " + roboTally + " more words.\n"
+				+ "The computer found all of your words plus these:\n"
+				+ "================================================\n");
+		for (String word : wordsNotFound) {
+			System.out.print(word + " ");
+			if ((i + 1) % 10 == 0) {
 				System.out.print("\n");
 			}
+			i++;
 		}
 
 	}
 
-	private static boolean validWord(String word) {
-		if (!DICTIONARY.contains(word) || (word.length() < 3 || word.length() > 16) || DUPLICATES.contains(word)) {
+	private static TreeSet<String> computerResults(DiceTray tray) {
+		TreeSet<String> total = new TreeSet<>();
+		for (String word : DICTIONARY) {
+			if (tray.found(word)) {
+				total.add(word);
+			}
+		}
+		return total;
+	}
+
+	private static boolean validWord(String word, TreeSet<String> allWords) {
+		if (!allWords.contains(word) || (word.length() < 3 || word.length() > 16) || DUPLICATES.contains(word)) {
 			return false;
 		}
 		return true;
@@ -89,7 +156,6 @@ public class BoggleGame {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-
 
 	}
 
