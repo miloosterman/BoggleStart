@@ -10,100 +10,107 @@ import java.util.Scanner;
 import java.util.TreeSet;
 
 public class BoggleGame {
-	private static HashSet<String> DICTIONARY = new HashSet<>();
-	private static HashSet<String> DUPLICATES = new HashSet<>();
-	private static int SCORE = 0;
+	private HashSet<String> dictionary;
+	private HashSet<String> duplicates;
+	private int score;
+	private DiceTray tray;
+	private TreeSet<String> allWords;
+	private TreeSet<String> foundWords;
+	private TreeSet<String> incorrectWords;
+	private int roboTally = 0;
+	private TreeSet<String> missedWords;
 
-	public static void main(String[] args) {
+	public BoggleGame() {
 		populateDictionary();
-		DiceTray tray = new DiceTray();
-		String endCommand = "ZZ";
-		TreeSet<String> allWords = computerResults(tray);
-		String[] guesses;
-		TreeSet<String> foundWords = new TreeSet<>();
-		TreeSet<String> incorrectWords = new TreeSet<>();
+		duplicates = new HashSet<>();
+		score = 0;
+		tray = new DiceTray();
+		allWords = computerResults(tray);
+		foundWords = new TreeSet<>();
+		incorrectWords = new TreeSet<>();
+		missedWords = new TreeSet<>();
+	}
+	
+	public int getScore() {
+		return score;
+	}
+	
+	public TreeSet<String> getFound(){
+		return foundWords;
+	}
+	
+	public TreeSet<String> getIncorrect(){
+		return incorrectWords;
+	}
+	
+	public TreeSet<String> getMissed
 
-		boolean endFlag = false;
-		Scanner sc = new Scanner(System.in);
-
-		intro(tray);
-		while (!endFlag) {
-			guesses = getGuesses(sc);
-			for (int i = 0; i < guesses.length; i++) {
-				if (guesses[i].equals(endCommand)) {
-					endFlag = true;
-					allWords = computerResults(tray);
-					printResults(foundWords, incorrectWords, allWords);
-					computerResults(tray);
-
-				} else {
-					guesses[i] = guesses[i].toLowerCase();
-					if (tray.found(guesses[i]) && validWord(guesses[i], allWords)) {
-						foundWords.add(guesses[i]);
-						DUPLICATES.add(guesses[i]);
-						updateScore(guesses[i]);
-					} else {
-						if (!DUPLICATES.contains(guesses[i])) {
-							incorrectWords.add(guesses[i]);
-						}
-					}
+	public void play(String[] guesses) {
+		for (int i = 0; i < guesses.length; i++) {
+			String guess = guesses[i].toLowerCase();
+			if (tray.found(guess) && validWord(guess, allWords)) {
+				foundWords.add(guess);
+				duplicates.add(guess);
+				updateScore(guess);
+			} else {
+				if (!duplicates.contains(guess)) {
+					incorrectWords.add(guess);
 				}
 			}
 		}
-		sc.close();
+
 	}
 
-	private static void updateScore(String guess) {
+	private void updateScore(String guess) {
 		switch (guess.length()) {
 		case 3:
-			SCORE++;
+			score++;
 			break;
 		case 4:
-			SCORE++;
+			score++;
 			break;
 		case 5:
-			SCORE += 2;
+			score += 2;
 			break;
 		case 6:
-			SCORE += 3;
+			score += 3;
 			break;
 		case 7:
-			SCORE += 5;
+			score += 5;
 			break;
 		default:
-			SCORE += 11;
+			score += 11;
 		}
 
 	}
 
-	private static void intro(DiceTray tray) {
-		System.out.println("Play one game of Boggle:\n");
-		System.out.println(tray);
-		System.out.println("Enter words or ZZ to quit:");
+	public String intro() {
+		return "Play one game of Boggle:\n" + tray + "Enter words or ZZ to quit:\n";
+
 	}
 
-	private static String[] getGuesses(Scanner sc) {
+	private String[] getGuesses(Scanner sc) {
 		String[] guesses = sc.nextLine().split(" ");
 		return guesses;
 	}
 
-	private static void printResults(TreeSet<String> foundWords, TreeSet<String> incorrectWords,
-			TreeSet<String> allWords) {
-		System.out.print("Your score: " + SCORE + "\nWords you found:\n" + "================\n");
+	public String results() {
+		String res = "";
+		res += "Your score: " + score + "\nWords you found:\n" + "================\n";
 		int i = 0;
 		for (String word : foundWords) {
-			System.out.print(word + " ");
+			res += word + " ";
 			if ((i + 1) % 10 == 0) {
-				System.out.print("\n");
+				res += "\n";
 			}
 			i++;
 		}
 		i = 0;
-		System.out.print("\n\nIncorrect words:\n" + "================\n");
+		res += "\n\nIncorrect words:\n" + "================\n";
 		for (String word : incorrectWords) {
-			System.out.print(word + " ");
+			res += word + " ";
 			if ((i + 1) % 10 == 0) {
-				System.out.print("\n");
+				res += "\n";
 			}
 			i++;
 		}
@@ -116,22 +123,24 @@ public class BoggleGame {
 				roboTally++;
 			}
 		}
-		System.out.print("\n\nYou could have found " + roboTally + " more words.\n"
+		res += "\n\nYou could have found " + roboTally + " more words.\n"
 				+ "The computer found all of your words plus these:\n"
-				+ "================================================\n");
+				+ "================================================\n";
 		for (String word : wordsNotFound) {
-			System.out.print(word + " ");
+			res += word + " ";
 			if ((i + 1) % 10 == 0) {
-				System.out.print("\n");
+				res += "\n";
 			}
 			i++;
 		}
 
+		return res;
+
 	}
 
-	private static TreeSet<String> computerResults(DiceTray tray) {
+	private TreeSet<String> computerResults(DiceTray tray) {
 		TreeSet<String> total = new TreeSet<>();
-		for (String word : DICTIONARY) {
+		for (String word : dictionary) {
 			if (tray.found(word)) {
 				total.add(word);
 			}
@@ -139,25 +148,27 @@ public class BoggleGame {
 		return total;
 	}
 
-	private static boolean validWord(String word, TreeSet<String> allWords) {
-		if (!allWords.contains(word) || (word.length() < 3 || word.length() > 16) || DUPLICATES.contains(word)) {
+	private boolean validWord(String word, TreeSet<String> allWords) {
+		if (!allWords.contains(word) || (word.length() < 3 || word.length() > 16) || duplicates.contains(word)) {
 			return false;
 		}
 		return true;
 	}
 
-	private static void populateDictionary() {
+	private void populateDictionary() {
+		HashSet<String> dictionary = new HashSet<>();
 		File file = new File("/Users/milo/Desktop/UASemester4/CSC335/BoggleStart/BoggleWords.txt");
 		Scanner sc;
 		try {
 			sc = new Scanner(file);
 			while (sc.hasNextLine()) {
-				DICTIONARY.add(sc.nextLine().toLowerCase());
+				dictionary.add(sc.nextLine().toLowerCase());
 			}
 			sc.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+		this.dictionary = dictionary;
 
 	}
 
