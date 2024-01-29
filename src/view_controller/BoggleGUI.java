@@ -5,15 +5,11 @@ package view_controller;
  * Course: CSC335
  */
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
@@ -24,25 +20,28 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.geometry.Insets;
 import model.BoggleGame;
-import model.DiceTray;
 
 public class BoggleGUI extends Application {
-	private DiceTray diceTray = new DiceTray();
 	private TextArea trayArea = new TextArea();
 	private BorderPane borderPane = new BorderPane();
 	private Text score = new Text("Score: 0");
 	private Label guessLabel = new Label("Guesses: ");
 	private TextField guessField = new TextField();
-	private Button guessSubmit = new Button("Submit");
 	private Label foundLabel = new Label("Found Words: ");
 	private TextArea found = new TextArea();
 	private Label incorrectLabel = new Label("Incorrect Words: ");
 	private TextArea incorrect = new TextArea();
 	private Label missedLabel = new Label("Missed Words: ");
 	private TextArea missed = new TextArea();
+	private BoggleGame boggleGame = new BoggleGame();
 
 	@Override
 	public void start(Stage stage) {
+		guessField.setOnKeyPressed(event -> {
+			if (event.getCode() == KeyCode.ENTER) {
+				handleSubmit();
+			}
+		});
 		stage.setTitle("Boggle Game");
 		borderPane.setPadding(new Insets(12, 12, 12, 12));
 		HBox buttonBox = addButtons();
@@ -60,15 +59,14 @@ public class BoggleGUI extends Application {
 	private VBox addWord() {
 		VBox wordBox = new VBox();
 		wordBox.setPadding(new Insets(12, 12, 12, 12));
-		guessSubmit.setOnAction(e -> handleSubmit());
 		found.setEditable(false);
 		incorrect.setEditable(false);
 		missed.setEditable(false);
 		found.setWrapText(true);
 		incorrect.setWrapText(true);
 		missed.setWrapText(true);
-		wordBox.getChildren().addAll(guessLabel, guessField, guessSubmit, foundLabel, found, incorrectLabel, incorrect,
-				missedLabel, missed);
+		wordBox.getChildren().addAll(guessLabel, guessField, foundLabel, found, incorrectLabel, incorrect, missedLabel,
+				missed);
 		return wordBox;
 
 	}
@@ -76,8 +74,17 @@ public class BoggleGUI extends Application {
 	private void handleSubmit() {
 		String input = guessField.getText();
 		String[] guesses = input.split(" ");
-		BoggleGame boggleGame = new BoggleGame();
+		guessField.clear();
 		boggleGame.play(guesses);
+
+	}
+
+	private void handleEnd() {
+		score.setText("Score: " + boggleGame.getScore());
+		found.setText(boggleGame.getFound().toString());
+		incorrect.setText(boggleGame.getIncorrect().toString());
+		missed.setText(boggleGame.getMissed().toString());
+		boggleGame = new BoggleGame();
 	}
 
 	private VBox addTray() {
@@ -87,7 +94,7 @@ public class BoggleGUI extends Application {
 		trayArea.setEditable(false);
 		Font font = Font.font("Courier New", FontWeight.BOLD, 16);
 		trayArea.setFont(font);
-		trayArea.setText(diceTray.toString());
+		trayArea.setText(boggleGame.getTray().toString());
 		trayBox.getChildren().addAll(trayArea, score);
 		return trayBox;
 	}
@@ -98,14 +105,15 @@ public class BoggleGUI extends Application {
 		buttonBox.setSpacing(50);
 		Button newButton = new Button("New Game");
 		newButton.setOnAction(e -> handleNewGame());
-		Button endButton = new Button("End Program");
+		Button endButton = new Button("End Game");
+		endButton.setOnAction(e -> handleEnd());
 		buttonBox.getChildren().addAll(newButton, endButton);
 		return buttonBox;
 	}
 
 	private void handleNewGame() {
-		diceTray = new DiceTray();
-		trayArea.setText(diceTray.toString());
+		score.setText("Score: " + boggleGame.getScore());
+		trayArea.setText(boggleGame.getTray().toString());
 		guessField.clear();
 		found.clear();
 		incorrect.clear();

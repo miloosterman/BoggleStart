@@ -25,30 +25,41 @@ public class BoggleGame {
 		duplicates = new HashSet<>();
 		score = 0;
 		tray = new DiceTray();
-		allWords = computerResults(tray);
+		allWords = computerResults(getTray());
 		foundWords = new TreeSet<>();
 		incorrectWords = new TreeSet<>();
 		missedWords = new TreeSet<>();
 	}
-	
+
 	public int getScore() {
 		return score;
 	}
 	
-	public TreeSet<String> getFound(){
+	public DiceTray getTray() {
+		return tray;
+	}
+
+
+	public TreeSet<String> getFound() {
 		return foundWords;
 	}
-	
-	public TreeSet<String> getIncorrect(){
+
+	public TreeSet<String> getIncorrect() {
 		return incorrectWords;
 	}
-	
-	public TreeSet<String> getMissed
+
+	public TreeSet<String> getMissed() {
+		return missedWords;
+	}
+
+	public int getMissedCount() {
+		return roboTally;
+	}
 
 	public void play(String[] guesses) {
 		for (int i = 0; i < guesses.length; i++) {
 			String guess = guesses[i].toLowerCase();
-			if (tray.found(guess) && validWord(guess, allWords)) {
+			if (getTray().found(guess) && validWord(guess)) {
 				foundWords.add(guess);
 				duplicates.add(guess);
 				updateScore(guess);
@@ -58,7 +69,17 @@ public class BoggleGame {
 				}
 			}
 		}
+		updateMissed();
 
+	}
+
+	private void updateMissed() {
+	    for (String word : allWords) {
+	        if (!foundWords.contains(word) && !missedWords.contains(word) && !duplicates.contains(word)) {
+	            missedWords.add(word);
+	            roboTally++;
+	        }
+	    }
 	}
 
 	private void updateScore(String guess) {
@@ -85,7 +106,7 @@ public class BoggleGame {
 	}
 
 	public String intro() {
-		return "Play one game of Boggle:\n" + tray + "Enter words or ZZ to quit:\n";
+		return "Play one game of Boggle:\n" + getTray() + "Enter words or ZZ to quit:\n";
 
 	}
 
@@ -115,18 +136,10 @@ public class BoggleGame {
 			i++;
 		}
 		i = 0;
-		int roboTally = 0;
-		TreeSet<String> wordsNotFound = new TreeSet<>();
-		for (String word : allWords) {
-			if (!foundWords.contains(word)) {
-				wordsNotFound.add(word);
-				roboTally++;
-			}
-		}
 		res += "\n\nYou could have found " + roboTally + " more words.\n"
 				+ "The computer found all of your words plus these:\n"
 				+ "================================================\n";
-		for (String word : wordsNotFound) {
+		for (String word : missedWords) {
 			res += word + " ";
 			if ((i + 1) % 10 == 0) {
 				res += "\n";
@@ -148,8 +161,8 @@ public class BoggleGame {
 		return total;
 	}
 
-	private boolean validWord(String word, TreeSet<String> allWords) {
-		if (!allWords.contains(word) || (word.length() < 3 || word.length() > 16) || duplicates.contains(word)) {
+	private boolean validWord(String word) {
+		if (!dictionary.contains(word) || (word.length() < 3 || word.length() > 16) || duplicates.contains(word)) {
 			return false;
 		}
 		return true;
@@ -171,5 +184,6 @@ public class BoggleGame {
 		this.dictionary = dictionary;
 
 	}
+
 
 }

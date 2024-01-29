@@ -1,6 +1,5 @@
 package view_controller;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -25,21 +24,7 @@ public class BoggleConsole {
 			game.play(guesses);
 		}
 		System.out.println(game.results());
+		sc.close();
 	}
-
-//	private boolean getGuesses(Scanner sc) {
-//		String[] guesses;
-//		boolean endFlag = false;
-//		while (!endFlag) {
-//			guesses = sc.nextLine().split(" ");
-//			for (int i = 0; i < guesses.length; i++) {
-//				if (guesses[i] == "ZZ") {
-//					endFlag = true;
-//					guesses = Arrays.copyOfRange(guesses, 0, i);
-//				}
-//			}
-//			game.play(guesses);
-//		}
-//	}
 
 }
